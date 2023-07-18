@@ -10,21 +10,22 @@ from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import Chroma
 
-# Configurações da página
-st.set_page_config(
-    page_title="LangChain QA Panel App",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+
+# Adicionar a imagem no cabeçalho
+image_url = "https://cienciadosdados.com/images/CINCIA_DOS_DADOS_4.png"
+st.image(image_url, use_column_width=True)
+
+# Adicionar o nome do aplicativo
+st.subheader("Q&A com IA - PLN usando LangChain")
 
 # Componentes interativos
 file_input = st.file_uploader("Upload a PDF file")
-openaikey = st.text_input("Entre com sua OpenAI API Key", type='password')
-prompt = st.text_area("Faça suas Perguntas ao Assistente", height=160)
+openaikey = st.text_input("Enter your OpenAI API Key", type='password')
+prompt = st.text_area("Enter your questions", height=160)
 run_button = st.button("Run!")
 
-select_k = st.slider("Número de chunks relevantes", min_value=1, max_value=5, value=2)
-select_chain_type = st.radio("Tipo de Chain", ['stuff', 'map_reduce', "refine", "map_rerank"])
+select_k = st.slider("Number of relevant chunks", min_value=1, max_value=5, value=2)
+select_chain_type = st.radio("Chain type", ['stuff', 'map_reduce', "refine", "map_rerank"])
 
 # Função de perguntas e respostas
 def qa(file, query, chain_type, k):
@@ -48,9 +49,9 @@ def qa(file, query, chain_type, k):
 
 # Função para exibir o resultado no Streamlit
 def display_result(result):
-    st.markdown("### Resultado:")
+    st.markdown("### Result:")
     st.write(result["result"])
-    st.markdown("### Fonte Relevante no texto:")
+    st.markdown("### Relevant source text:")
     for doc in result["source_documents"]:
         st.markdown("---")
         st.markdown(doc.page_content)
