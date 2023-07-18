@@ -19,12 +19,12 @@ st.set_page_config(
 
 # Componentes interativos
 file_input = st.file_uploader("Upload a PDF file")
-openaikey = st.text_input("Enter your OpenAI API Key", type='password')
-prompt = st.text_area("Enter your questions", height=160)
+openaikey = st.text_input("Entre com sua OpenAI API Key", type='password')
+prompt = st.text_area("Faça suas Perguntas ao Assistente", height=160)
 run_button = st.button("Run!")
 
-select_k = st.slider("Number of relevant chunks", min_value=1, max_value=5, value=2)
-select_chain_type = st.radio("Chain type", ['stuff', 'map_reduce', "refine", "map_rerank"])
+select_k = st.slider("Número de chunks relevantes", min_value=1, max_value=5, value=2)
+select_chain_type = st.radio("Tipo de Chain", ['stuff', 'map_reduce', "refine", "map_rerank"])
 
 # Função de perguntas e respostas
 def qa(file, query, chain_type, k):
@@ -48,9 +48,9 @@ def qa(file, query, chain_type, k):
 
 # Função para exibir o resultado no Streamlit
 def display_result(result):
-    st.markdown("### Result:")
+    st.markdown("### Resultado:")
     st.write(result["result"])
-    st.markdown("### Relevant source text:")
+    st.markdown("### Fonte Relevante no texto:")
     for doc in result["source_documents"]:
         st.markdown("---")
         st.markdown(doc.page_content)
