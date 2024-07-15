@@ -6,7 +6,7 @@ from PIL import Image
 import docx
 import streamlit as st
 from langchain.chains import RetrievalQA
-from langchain.llms import OpenAI
+from langchain.chat_models import ChatOpenAI
 from langchain.document_loaders import PyPDFLoader, TextLoader
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings
@@ -76,10 +76,11 @@ def qa(file_path, file_type, query, chain_type, k):
         
         # create a chain to answer questions 
         qa = RetrievalQA.from_chain_type(
-            llm=OpenAI(model="gpt-4", api_base="https://api.openai.com/v1/chat/completions"),
-            chain_type=chain_type,
-            retriever=retriever,
-            return_source_documents=True)
+            llm=ChatOpenAI(model="gpt-4"), 
+            chain_type=chain_type, 
+            retriever=retriever, 
+            return_source_documents=True
+        )
         result = qa({"query": query})
         return result
     except PdfReadError as e:
