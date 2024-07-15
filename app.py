@@ -8,6 +8,7 @@ from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import Chroma
 from pypdf.errors import PdfReadError
+from openai.error import AuthenticationError, InvalidRequestError
 
 # Adicionar a imagem no cabeçalho
 image_url = "https://cienciadosdados.com/images/CINCIA_DOS_DADOS_4.png"
@@ -48,6 +49,12 @@ def qa(file, query, chain_type, k):
     except PdfReadError as e:
         st.error(f"Error reading PDF file: {e}")
         return None
+    except AuthenticationError as e:
+        st.error(f"Authentication error: {e}")
+        return None
+    except InvalidRequestError as e:
+        st.error(f"Invalid request error: {e}")
+        return None
 
 # Função para exibir o resultado no Streamlit
 def display_result(result):
@@ -70,8 +77,15 @@ if run_button and file_input and openaikey and prompt:
         # Configurar a chave de API do OpenAI
         os.environ["OPENAI_API_KEY"] = openaikey
 
-        # Executar a função de perguntas e respostas
-        result = qa(temp_file_path, prompt, select_chain_type, select_k)
-
-        # Exibir o resultado
-        display_result(result)
+        # Verificar se a chave de API é válida
+        try:
+            # Testar a chave de API com uma chamada simples
+            embeddings = OpenAIEmbeddings()
+            embeddings.embed_documents(["test"])
+        except AuthenticationError as e:
+            st.error(f"Invalid OpenAI API Key: {e}")
+        else:
+            # Executar a função de perguntas e respostas
+            result = qa(temp_file_path, prompt, select_chain_type, select_k)
+            # Exibir o resultado
+            display_result(result)
