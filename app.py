@@ -34,28 +34,29 @@ select_chain_type = st.radio("Chain type", ['stuff', 'map_reduce', "refine", "ma
 def load_document(file_path, file_type):
     if file_type == 'application/pdf':
         loader = PyPDFLoader(file_path)
-        return loader.load()
+        documents = loader.load()
     elif file_type == 'text/plain':
         loader = TextLoader(file_path)
-        return loader.load()
+        documents = loader.load()
     elif file_type == 'text/csv':
         df = pd.read_csv(file_path)
-        return [{"page_content": df.to_string()}]
+        documents = [{"page_content": df.to_string()}]
     elif file_type in ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword']:
         doc = docx.Document(file_path)
         full_text = []
         for para in doc.paragraphs:
             full_text.append(para.text)
-        return [{"page_content": "\n".join(full_text)}]
+        documents = [{"page_content": "\n".join(full_text)}]
     elif file_type in ['image/jpeg', 'image/png']:
         text = pytesseract.image_to_string(Image.open(file_path))
-        return [{"page_content": text}]
+        documents = [{"page_content": text}]
     elif file_type in ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel']:
         df = pd.read_excel(file_path)
-        return [{"page_content": df.to_string()}]
+        documents = [{"page_content": df.to_string()}]
     else:
         st.error("Unsupported file type.")
-        return None
+        documents = None
+    return documents
 
 # Função de perguntas e respostas
 def qa(file_path, file_type, query, chain_type, k):
