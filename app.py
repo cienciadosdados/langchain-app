@@ -3,13 +3,11 @@ import tempfile
 import streamlit as st
 from langchain.chains import RetrievalQA
 from langchain.llms import OpenAI
-from langchain.document_loaders import TextLoader
 from langchain.document_loaders import PyPDFLoader
-from langchain.indexes import VectorstoreIndexCreator
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import Chroma
-
+from pypdf.errors import PdfReadError
 
 # Adicionar a imagem no cabeçalho
 image_url = "https://cienciadosdados.com/images/CINCIA_DOS_DADOS_4.png"
@@ -29,32 +27,37 @@ select_chain_type = st.radio("Chain type", ['stuff', 'map_reduce', "refine", "ma
 
 # Função de perguntas e respostas
 def qa(file, query, chain_type, k):
-    # load document
-    loader = PyPDFLoader(file)
-    documents = loader.load()
-    # split the documents into chunks
-    text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-    texts = text_splitter.split_documents(documents)
-    # select which embeddings we want to use
-    embeddings = OpenAIEmbeddings()
-    # create the vectorestore to use as the index
-    db = Chroma.from_documents(texts, embeddings)
-    # expose this index in a retriever interface
-    retriever = db.as_retriever(search_type="similarity", search_kwargs={"k": k})
-    # create a chain to answer questions 
-    qa = RetrievalQA.from_chain_type(
-        llm=OpenAI(), chain_type=chain_type, retriever=retriever, return_source_documents=True)
-    result = qa({"query": query})
-    return result
+    try:
+        # load document
+        loader = PyPDFLoader(file)
+        documents = loader.load()
+        # split the documents into chunks
+        text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+        texts = text_splitter.split_documents(documents)
+        # select which embeddings we want to use
+        embeddings = OpenAIEmbeddings()
+        # create the vectorestore to use as the index
+        db = Chroma.from_documents(texts, embeddings)
+        # expose this index in a retriever interface
+        retriever = db.as_retriever(search_type="similarity", search_kwargs={"k": k})
+        # create a chain to answer questions 
+        qa = RetrievalQA.from_chain_type(
+            llm=OpenAI(), chain_type=chain_type, retriever=retriever, return_source_documents=True)
+        result = qa({"query": query})
+        return result
+    except PdfReadError as e:
+        st.error(f"Error reading PDF file: {e}")
+        return None
 
 # Função para exibir o resultado no Streamlit
 def display_result(result):
-    st.markdown("### Result:")
-    st.write(result["result"])
-    st.markdown("### Relevant source text:")
-    for doc in result["source_documents"]:
-        st.markdown("---")
-        st.markdown(doc.page_content)
+    if result:
+        st.markdown("### Result:")
+        st.write(result["result"])
+        st.markdown("### Relevant source text:")
+        for doc in result["source_documents"]:
+            st.markdown("---")
+            st.markdown(doc.page_content)
 
 # Execução do app
 if run_button and file_input and openaikey and prompt:
