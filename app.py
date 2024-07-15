@@ -43,7 +43,7 @@ def qa(file, query, chain_type, k):
         retriever = db.as_retriever(search_type="similarity", search_kwargs={"k": k})
         # create a chain to answer questions 
         qa = RetrievalQA.from_chain_type(
-            llm=OpenAI(), chain_type=chain_type, retriever=retriever, return_source_documents=True)
+            llm=OpenAI(model="gpt-4"), chain_type=chain_type, retriever=retriever, return_source_documents=True)
         result = qa({"query": query})
         return result
     except PdfReadError as e:
