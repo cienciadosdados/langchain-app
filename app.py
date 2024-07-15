@@ -6,7 +6,7 @@ from PIL import Image
 import docx
 import streamlit as st
 from langchain.chains import RetrievalQA
-from langchain.chat_models import ChatOpenAI
+from langchain.llms import OpenAI
 from langchain.document_loaders import PyPDFLoader, TextLoader
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings
@@ -22,7 +22,7 @@ st.image(image_url, use_column_width=True)
 st.subheader("Q&A com IA - PLN usando LangChain")
 
 # Componentes interativos
-file_input = st.file_uploader("Upload a file", type=['pdf', 'txt', 'csv', 'docx', 'jpeg', 'png', 'xlsx', 'xls'])
+file_input = st.file_uploader("Upload a file", type=['pdf', 'txt', 'csv', 'docx', 'jpeg', 'png'])
 openaikey = st.text_input("Enter your OpenAI API Key", type='password')
 prompt = st.text_area("Enter your questions", height=160)
 run_button = st.button("Run!")
@@ -41,7 +41,7 @@ def load_document(file_path, file_type):
     elif file_type == 'text/csv':
         df = pd.read_csv(file_path)
         return [{"page_content": df.to_string()}]
-    elif file_type in ['application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/msword']:
+    elif file_type == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
         doc = docx.Document(file_path)
         full_text = []
         for para in doc.paragraphs:
@@ -50,9 +50,6 @@ def load_document(file_path, file_type):
     elif file_type in ['image/jpeg', 'image/png']:
         text = pytesseract.image_to_string(Image.open(file_path))
         return [{"page_content": text}]
-    elif file_type in ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel']:
-        df = pd.read_excel(file_path)
-        return [{"page_content": df.to_string()}]
     else:
         st.error("Unsupported file type.")
         return None
@@ -79,11 +76,10 @@ def qa(file_path, file_type, query, chain_type, k):
         
         # create a chain to answer questions 
         qa = RetrievalQA.from_chain_type(
-            llm=ChatOpenAI(model="gpt-4"), 
-            chain_type=chain_type, 
-            retriever=retriever, 
-            return_source_documents=True
-        )
+            llm=OpenAI(model="gpt-4", api_base="https://api.openai.com/v1/chat/completions"),
+            chain_type=chain_type,
+            retriever=retriever,
+            return_source_documents=True)
         result = qa({"query": query})
         return result
     except PdfReadError as e:
@@ -104,7 +100,7 @@ def display_result(result):
         st.markdown("### Relevant source text:")
         for doc in result["source_documents"]:
             st.markdown("---")
-            st.markdown(doc['page_content'])
+            st.markdown(doc.page_content)
 
 # Execução do app
 if run_button and file_input and openaikey and prompt:
